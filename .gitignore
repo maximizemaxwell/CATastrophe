@@ -18,6 +18,10 @@ build/
 # mdBook build output
 docs/book/
 
+#Dataset
+data/
+data/dataset.json
+
 # Package
 *.tar.gz
 *.whl
