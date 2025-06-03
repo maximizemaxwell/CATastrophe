@@ -1,0 +1,79 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.pyd
+*.pyo
+*.log
+*.egg-info/
+*.env
+*.venv
+.env
+.venv/
+venv/
+dist/
+build/
+
+
+# mdBook build output
+docs/book/
+
+# Package
+*.tar.gz
+*.whl
+
+# 📊 Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# 🔬 모델 출력
+hf_model/*.pth
+hf_model/*.pkl
+hf_model/model_card.json
+
+# ⏳ 학습 중간 저장
+*.ckpt
+*.tmp
+*.bak
+
+# Dataset
+data/raw/
+data/processed/
+data/*.zip
+data/*.jsonl
+data/*.csv
+data/*.tsv
+
+# 📈 TensorBoard
+results/
+*.metrics.json
+*.eval.json
+*.tsne.png
+
+# 🧪 pytest
+htmlcov/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+
+# 🔧 IDE
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# 🐳 Docker
+docker/*.pyc
+docker/__pycache__/
+docker/tmp/
+*.container
+*.pid
+
+# 🧪 GitHub Actions
+github_bot/__pycache__/
+github_bot/*.pyc
+github_bot/tmp/
+github_bot/model/
+
+
