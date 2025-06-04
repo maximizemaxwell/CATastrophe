@@ -12,11 +12,15 @@ CATastrophe uses deep learning to identify potential security vulnerabilities in
 # Install dependencies
 pip install -r requirements.txt
 
+# Set up environment (required for training data access)
+cp .env.example .env
+# Edit .env and add your HUGGINGFACE_TOKEN
+
 # Train the model
-python -m catastrphe.train
+python3 run_training.py
 
 # Analyze code for vulnerabilities
-python -m catastrphe.predict --file example.py
+PYTHONPATH=./src python3 -m catastrophe.predict --message "test" --func "def test(): pass"
 ```
 
 ## Features

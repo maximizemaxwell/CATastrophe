@@ -15,11 +15,14 @@ from torch import nn, optim
 from torch.utils.data import DataLoader, TensorDataset
 from dotenv import load_dotenv
 from huggingface_hub import HfApi
+from datasets import load_dataset
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
 from .config import (
     DATA_PATH,
+    HF_DATASET_REPO,
+    HF_DATASET_NAME,
     MODEL_WEIGHTS_PATH,
     VECTORIZER_PATH,
     BATCH_SIZE,
@@ -28,38 +31,90 @@ from .config import (
     MAX_FEATURES,
     EARLY_STOPPING_PATIENCE,
     MIN_DELTA,
+    BASE_DIR,
 )
 from .features.vectorizer import TFIDFVectorizerWrapper
 from .model.autoencoder import Autoencoder
 
-load_dotenv()
+# Load .env from project root
+load_dotenv(BASE_DIR / ".env")
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
 
-def load_texts(path):
+def load_texts_from_hf():
     """
-    Load dataset from JSON, returns message+text
+    Load dataset from Hugging Face Hub
     """
-    texts = []
-    with open(path, "r", encoding="utf-8") as f:
-        for line in f:
-            if not line.strip():
-                continue
-            item = json.loads(line)
+    try:
+        # Get HuggingFace token from environment
+        token = os.getenv("HF_TOKEN") or os.getenv("HUGGINGFACE_TOKEN")
+        if not token:
+            logging.warning("HF_TOKEN not found, falling back to local dataset")
+            return load_texts_from_local()
+        
+        logging.info(f"Loading dataset from Hugging Face: {HF_DATASET_REPO}")
+        
+        # Load dataset from HF Hub
+        dataset = load_dataset(
+            HF_DATASET_REPO, 
+            HF_DATASET_NAME,
+            token=token,
+            trust_remote_code=True
+        )
+        
+        # Extract training data
+        train_data = dataset['train']
+        
+        # Combine message and func columns
+        texts = []
+        for item in train_data:
             combined = item["message"] + " <SEP > " + item["func"]
             texts.append(combined)
+        
+        logging.info(f"Loaded {len(texts)} samples from Hugging Face dataset")
+        return texts
+        
+    except Exception as e:
+        logging.error(f"Failed to load from Hugging Face: {e}")
+        logging.info("Falling back to local dataset")
+        return load_texts_from_local()
+
+
+def load_texts_from_local():
+    """
+    Load dataset from local JSON file (fallback)
+    """
+    texts = []
+    try:
+        with open(DATA_PATH, "r", encoding="utf-8") as f:
+            for line in f:
+                if not line.strip():
+                    continue
+                item = json.loads(line)
+                combined = item["message"] + " <SEP > " + item["func"]
+                texts.append(combined)
+        logging.info(f"Loaded {len(texts)} samples from local dataset")
+    except FileNotFoundError:
+        logging.error(f"Local dataset not found at {DATA_PATH}")
+        raise
     return texts
+
+
+def load_texts():
+    """
+    Load dataset, preferring Hugging Face Hub over local files
+    """
+    return load_texts_from_hf()
 
 
 def train():
     """
     Train the model
     """
-    # Load dataset
-    texts = load_texts(DATA_PATH)
-    logging.info("Loaded %d samples from dataset", len(texts))
+    # Load dataset from Hugging Face Hub (with local fallback)
+    texts = load_texts()
 
     # TF-IDF Vectorizer training, save
     logging.info("Training TF-IDF Vectorizer with max features: %d", MAX_FEATURES)
