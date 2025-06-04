@@ -10,6 +10,7 @@ from catastrphe.config import MODEL_WEIGHTS_PATH
 from catastrphe.features.vectorizer import TFIDFVectorizerWrapper
 from catastrphe.model.autoencoder import Autoencoder
 
+
 def predict_score(message: str, func: str) -> float:
     """
     Predict the anomaly score for a given message and function.
@@ -18,7 +19,7 @@ def predict_score(message: str, func: str) -> float:
     vectorizer = TFIDFVectorizerWrapper.load_from_file()
 
     # Text merge and transform
-    input_text = message + ' <SEP > ' + func
+    input_text = message + " <SEP > " + func
     vec = vectorizer.transform([input_text])
     x = torch.tensor(vec.toarray(), dtype=torch.float32)
 
@@ -33,6 +34,7 @@ def predict_score(message: str, func: str) -> float:
         reconstructed = model(x)
         anomaly_score = torch.mean((x - reconstructed) ** 2).item()
     return anomaly_score
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
