@@ -21,7 +21,7 @@ VECTORIZER_PATH = MODEL_DIR / "vectorizer.pkl"
 
 # Training configuration
 MAX_FEATURES = 2000  # Maximum number of features for vectorization
-BATCH_SIZE = 32  # Batch size for Training
+BATCH_SIZE = 256  # Batch size for Training
 EPOCHS = 50  # Maximum number of epochs for Training
 LEARNING_RATE = 1e-3  # Learning rate for the optimizer
 EARLY_STOPPING_PATIENCE = 5  # Early stopping patience
