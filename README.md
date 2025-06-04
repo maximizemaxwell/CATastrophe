@@ -14,7 +14,14 @@ git clone <repository-url>
 cd catastrophe
 
 # Install dependencies
+# For CPU-only (default)
 pip install -r requirements.txt
+
+# For GPU with CUDA 11.8
+pip install -r requirements-gpu.txt
+
+# For GPU with CUDA 12.1
+pip install -r requirements-gpu-cu121.txt
 
 # Set up environment (required for training data access)
 cp .env.example .env
@@ -86,8 +93,17 @@ The system automatically detects and uses GPU when available:
 - **Memory Optimization**: Includes automatic cache clearing and memory management
 - **CPU Fallback**: Gracefully falls back to CPU if GPU is unavailable
 
-To verify GPU usage:
+**Important**: The default `requirements.txt` installs CPU-only PyTorch. For GPU support, install using the appropriate GPU requirements file:
+
 ```bash
+# Check your CUDA version
+nvidia-smi
+
+# Install GPU-enabled PyTorch
+pip install -r requirements-gpu.txt      # For CUDA 11.8
+pip install -r requirements-gpu-cu121.txt  # For CUDA 12.1
+
+# Verify GPU is available
 python3 test_gpu.py
 ```
 
