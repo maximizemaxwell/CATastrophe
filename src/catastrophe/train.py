@@ -9,6 +9,7 @@
 import json
 import logging
 import os
+import subprocess
 
 import torch
 from torch import nn, optim
@@ -119,6 +120,9 @@ def train():
     if torch.cuda.is_available():
         logging.info(f"GPU: {torch.cuda.get_device_name(0)}")
         logging.info(f"GPU Memory: {torch.cuda.get_device_properties(0).total_memory / 1e9:.2f} GB")
+        logging.info(f"CUDA_VISIBLE_DEVICES: {os.environ.get('CUDA_VISIBLE_DEVICES', 'Not set')}")
+        logging.info(f"PyTorch CUDA version: {torch.version.cuda}")
+        logging.info(f"Number of GPUs: {torch.cuda.device_count()}")
     
     # Load dataset from Hugging Face Hub (with local fallback)
     texts = load_texts()
@@ -164,8 +168,30 @@ def train():
         # Training phase
         model.train()
         train_losses = []
+        
+        # Log GPU memory usage at start of epoch
+        if torch.cuda.is_available():
+            logging.info(f"GPU Memory before epoch {epoch + 1}: Allocated: {torch.cuda.memory_allocated(0) / 1e9:.2f} GB, Cached: {torch.cuda.memory_reserved(0) / 1e9:.2f} GB")
+        
         for batch in tqdm(train_loader, desc=f"Epoch {epoch + 1} / {EPOCHS}"):
             inputs = batch[0].to(device)  # Move data to GPU
+            
+            # Verify tensor is on GPU (only log first batch of first epoch)
+            if epoch == 0 and train_losses == []:
+                logging.info(f"Input tensor device: {inputs.device}")
+                logging.info(f"Model device: {next(model.parameters()).device}")
+                
+                # Check nvidia-smi for GPU usage
+                if torch.cuda.is_available():
+                    try:
+                        result = subprocess.run(['nvidia-smi', '--query-gpu=utilization.gpu,memory.used,memory.total', '--format=csv,noheader,nounits'], 
+                                              capture_output=True, text=True)
+                        if result.returncode == 0:
+                            gpu_info = result.stdout.strip()
+                            logging.info(f"GPU Usage (nvidia-smi): {gpu_info}")
+                    except Exception as e:
+                        logging.debug(f"Could not run nvidia-smi: {e}")
+            
             optimizer.zero_grad()
             outputs = model(inputs)
             loss = criterion(outputs, inputs)
