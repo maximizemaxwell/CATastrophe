@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  train:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./data:/app/data
+      - ./hf_model:/app/hf_model
+    env_file:
+      - .env
+    profiles:
+      - train
+
+  github-bot:
+    build:
+      context: .
+      dockerfile: github_bot/Dockerfile
+    ports:
+      - "${BOT_PORT:-8080}:8080"
+    env_file:
+      - .env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

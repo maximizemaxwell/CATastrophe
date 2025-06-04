@@ -8,6 +8,7 @@ __pycache__/
 *.egg-info/
 *.env
 *.venv
+.env.example
 .env
 .venv/
 venv/
@@ -29,12 +30,12 @@ data/dataset.json
 # 📊 Jupyter Notebook checkpoints
 .ipynb_checkpoints/
 
-# 🔬 모델 출력
+# 🔬 Model
 hf_model/*.pth
 hf_model/*.pkl
 hf_model/model_card.json
 
-# ⏳ 학습 중간 저장
+
 *.ckpt
 *.tmp
 *.bak
@@ -80,4 +81,7 @@ github_bot/*.pyc
 github_bot/tmp/
 github_bot/model/
 
+# md
+CLAUDE.md
+DEPLOYMENT.md
 
