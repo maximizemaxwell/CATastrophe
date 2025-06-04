@@ -10,6 +10,7 @@ import json
 import logging
 import os
 import subprocess
+from pathlib import Path
 
 import torch
 from torch import nn, optim
@@ -282,7 +283,7 @@ def publish_to_huggingface(model, vect_wrapper, final_loss):
         vectorizer_path = "vectorizer.pkl"
 
         torch.save(model.state_dict(), model_path)
-        vect_wrapper.save(vectorizer_path)
+        vect_wrapper.save(Path(vectorizer_path))
 
         # Create model card
         model_card_content = f"""
