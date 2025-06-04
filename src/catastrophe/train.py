@@ -113,6 +113,13 @@ def train():
     """
     Train the model
     """
+    # Check for GPU availability
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    logging.info(f"Using device: {device}")
+    if torch.cuda.is_available():
+        logging.info(f"GPU: {torch.cuda.get_device_name(0)}")
+        logging.info(f"GPU Memory: {torch.cuda.get_device_properties(0).total_memory / 1e9:.2f} GB")
+    
     # Load dataset from Hugging Face Hub (with local fallback)
     texts = load_texts()
 
@@ -133,11 +140,15 @@ def train():
     train_dataset = TensorDataset(X_train_tensor)
     val_dataset = TensorDataset(X_val_tensor)
 
-    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
+    # Use pin_memory for faster data transfer when using GPU
+    pin_memory = torch.cuda.is_available()
+    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, pin_memory=pin_memory)
+    val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False, pin_memory=pin_memory)
 
     # Autoencoder model with enhanced architecture
     model = Autoencoder(input_dim=X.shape[1], dropout_rate=0.2)
+    model = model.to(device)  # Move model to GPU if available
+    
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE, weight_decay=1e-5)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, mode="min", factor=0.5, patience=3
@@ -154,7 +165,7 @@ def train():
         model.train()
         train_losses = []
         for batch in tqdm(train_loader, desc=f"Epoch {epoch + 1} / {EPOCHS}"):
-            inputs = batch[0]
+            inputs = batch[0].to(device)  # Move data to GPU
             optimizer.zero_grad()
             outputs = model(inputs)
             loss = criterion(outputs, inputs)
@@ -167,10 +178,14 @@ def train():
         val_losses = []
         with torch.no_grad():
             for batch in val_loader:
-                inputs = batch[0]
+                inputs = batch[0].to(device)  # Move data to GPU
                 outputs = model(inputs)
                 loss = criterion(outputs, inputs)
                 val_losses.append(loss.item())
+        
+        # Clear GPU cache to prevent memory issues
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
         avg_train_loss = sum(train_losses) / len(train_losses)
         avg_val_loss = sum(val_losses) / len(val_losses)
@@ -189,8 +204,9 @@ def train():
         if avg_val_loss < best_val_loss - MIN_DELTA:
             best_val_loss = avg_val_loss
             patience_counter = 0
-            # Save best model
-            torch.save(model.state_dict(), MODEL_WEIGHTS_PATH.with_suffix(".best.pth"))
+            # Save best model (move to CPU before saving)
+            torch.save(model.cpu().state_dict(), MODEL_WEIGHTS_PATH.with_suffix(".best.pth"))
+            model = model.to(device)  # Move back to GPU
         else:
             patience_counter += 1
             if patience_counter >= EARLY_STOPPING_PATIENCE:
@@ -200,13 +216,13 @@ def train():
     # Load best model if it exists
     best_model_path = MODEL_WEIGHTS_PATH.with_suffix(".best.pth")
     if best_model_path.exists():
-        model.load_state_dict(torch.load(best_model_path))
+        model.load_state_dict(torch.load(best_model_path, map_location=device))
         logging.info("Loaded best model from training")
 
-    # Save the final model weights
+    # Save the final model weights (move to CPU before saving)
     logging.info("Saving model weights locally...")
     MODEL_WEIGHTS_PATH.parent.mkdir(parents=True, exist_ok=True)
-    torch.save(model.state_dict(), MODEL_WEIGHTS_PATH)
+    torch.save(model.cpu().state_dict(), MODEL_WEIGHTS_PATH)
     logging.info("Model saved to %s", MODEL_WEIGHTS_PATH)
 
     # Publish to Hugging Face Hub
