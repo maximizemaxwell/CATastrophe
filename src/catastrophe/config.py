@@ -9,8 +9,10 @@ from pathlib import Path
 # Project root directory
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-# Data Path
-DATA_PATH = BASE_DIR / "data" / "dataset.json"
+# Data Configuration
+DATA_PATH = BASE_DIR / "data" / "dataset.json"  # Local fallback
+HF_DATASET_REPO = "ewhk9887/commit-vulnerability"  # Hugging Face dataset repository
+HF_DATASET_NAME = "default"  # Dataset configuration name
 
 # Model save path
 MODEL_DIR = BASE_DIR / "hf_model"

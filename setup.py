@@ -37,8 +37,8 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "catastrophe-train=catastrphe.train:train",
-            "catastrophe-predict=catastrphe.predict:main",
+            "catastrophe-train=catastrophe.train:train",
+            "catastrophe-predict=catastrophe.predict:main",
         ],
     },
 )

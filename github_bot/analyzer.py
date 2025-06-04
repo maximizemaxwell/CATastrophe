@@ -12,8 +12,8 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.catastrphe.model.autoencoder import Autoencoder
-from src.catastrphe.config import MAX_FEATURES
+from src.catastrophe.model.autoencoder import Autoencoder
+from src.catastrophe.config import MAX_FEATURES
 
 load_dotenv()
 
