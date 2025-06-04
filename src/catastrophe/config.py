@@ -14,6 +14,9 @@ DATA_PATH = BASE_DIR / "data" / "dataset.json"  # Local fallback
 HF_DATASET_REPO = "ewhk9887/commit-vulnerability"  # Hugging Face dataset repository
 HF_DATASET_NAME = "default"  # Dataset configuration name
 
+# Model Hugging Face Repository
+HF_MODEL_REPO = "ewhk9887/CATastrophe"  # Hugging Face model repository
+
 # Model save path
 MODEL_DIR = BASE_DIR / "hf_model"
 MODEL_WEIGHTS_PATH = MODEL_DIR / "autoencoder_weights.pth"

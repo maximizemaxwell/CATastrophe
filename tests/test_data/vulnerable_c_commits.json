@@ -1,0 +1,42 @@
+[
+  {
+    "message": "fix buffer overflow in string copy",
+    "func": "void copy_string(char* dest, char* src) {\n    strcpy(dest, src);\n}"
+  },
+  {
+    "message": "add user authentication",
+    "func": "int authenticate(char* password) {\n    char stored_pass[8];\n    gets(stored_pass);\n    return strcmp(password, stored_pass) == 0;\n}"
+  },
+  {
+    "message": "implement sql query function",
+    "func": "void execute_query(char* user_input) {\n    char query[256];\n    sprintf(query, \"SELECT * FROM users WHERE name='%s'\", user_input);\n    system(query);\n}"
+  },
+  {
+    "message": "add file access function",
+    "func": "FILE* open_file(char* filename) {\n    char path[100];\n    sprintf(path, \"/data/%s\", filename);\n    return fopen(path, \"r\");\n}"
+  },
+  {
+    "message": "process network data",
+    "func": "void process_packet(char* data, int size) {\n    char buffer[512];\n    memcpy(buffer, data, size);\n    printf(\"Received: %s\\n\", buffer);\n}"
+  },
+  {
+    "message": "validate user input",
+    "func": "int validate_input(char* input) {\n    char temp[64];\n    strcpy(temp, input);\n    return strlen(temp) > 0;\n}"
+  },
+  {
+    "message": "format output string",
+    "func": "void format_output(char* user_data) {\n    printf(user_data);\n}"
+  },
+  {
+    "message": "handle command execution",
+    "func": "void execute_command(char* cmd) {\n    char command[200];\n    sprintf(command, \"sh -c %s\", cmd);\n    system(command);\n}"
+  },
+  {
+    "message": "parse configuration file",
+    "func": "void parse_config(char* config_line) {\n    char key[50], value[50];\n    sscanf(config_line, \"%s=%s\", key, value);\n    setenv(key, value, 1);\n}"
+  },
+  {
+    "message": "decrypt user data",
+    "func": "void decrypt_data(char* encrypted, char* key) {\n    char decrypted[1024];\n    for(int i = 0; encrypted[i]; i++) {\n        decrypted[i] = encrypted[i] ^ key[i % strlen(key)];\n    }\n    printf(\"Decrypted: %s\\n\", decrypted);\n}"
+  }
+]

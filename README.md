@@ -135,6 +135,59 @@ Key configuration options in `src/catastrophe/config.py`:
 - `MAX_FEATURES = 2000`: TF-IDF vocabulary size
 - `EARLY_STOPPING_PATIENCE = 5`: Early stopping patience
 
+## Testing
+
+The project includes comprehensive tests with realistic C code examples:
+
+```bash
+# Install test dependencies
+pip install pytest pytest-cov
+
+# Run all tests
+pytest
+
+# Run tests with coverage report
+pytest --cov=catastrophe --cov-report=html
+
+# Run specific test categories
+pytest tests/test_vectorizer.py        # Vectorizer tests
+pytest tests/test_model.py             # Model architecture tests  
+pytest tests/test_prediction.py        # Prediction functionality tests
+pytest tests/test_integration.py       # End-to-end integration tests
+
+# Run tests in verbose mode
+pytest -v
+
+# Run tests and stop on first failure
+pytest -x
+```
+
+### Test Data
+
+The test suite includes realistic C code examples:
+
+- **Vulnerable C commits** (`tests/test_data/vulnerable_c_commits.json`):
+  - Buffer overflow vulnerabilities (`strcpy`, `gets`, `sprintf`)
+  - SQL injection patterns
+  - Format string vulnerabilities
+  - Command injection risks
+  - Memory management issues
+
+- **Safe C commits** (`tests/test_data/safe_c_commits.json`):
+  - Secure string handling (`strncpy`, `fgets`, `snprintf`)
+  - Prepared statements for SQL
+  - Input validation and bounds checking
+  - Proper memory management
+
+### Test Coverage
+
+Tests cover:
+- **Unit Tests**: Individual component functionality
+- **Integration Tests**: Complete pipeline from code to vulnerability detection
+- **Edge Cases**: Empty inputs, malformed data, large datasets
+- **Model Tests**: Neural network training, saving/loading, batch processing
+- **Vectorizer Tests**: TF-IDF transformation and persistence
+
 ## Linting and Code Quality
 
 ```bash

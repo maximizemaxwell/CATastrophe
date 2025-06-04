@@ -4,16 +4,14 @@ Vulnerability Analyzer using the trained CATastrophe model
 
 import os
 import torch
-import pickle
 import logging
-from huggingface_hub import hf_hub_download
 from dotenv import load_dotenv
 import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.catastrophe.model.autoencoder import Autoencoder
-from src.catastrophe.config import MAX_FEATURES
+from src.catastrophe.model.loader import load_model
+from src.catastrophe.config import HF_MODEL_REPO
 
 load_dotenv()
 
@@ -28,64 +26,21 @@ class VulnerabilityAnalyzer:
     def _load_model(self):
         """Load model and vectorizer from Hugging Face Hub"""
         try:
-            repo_id = os.getenv("HF_REPO_ID")
-            if not repo_id:
-                raise ValueError("HF_REPO_ID environment variable is required")
+            # Use HF_REPO_ID from environment or default to configured repo
+            repo_id = os.getenv("HF_REPO_ID", HF_MODEL_REPO)
 
             logging.info(f"Loading model from Hugging Face: {repo_id}")
 
-            # Download files from Hugging Face
-            model_path = hf_hub_download(
-                repo_id=repo_id, filename="catastrophe_model.pth"
+            # Load model and vectorizer using centralized loader
+            self.model, self.vectorizer = load_model(
+                prefer_hub=True, device=self.device
             )
-            vectorizer_path = hf_hub_download(
-                repo_id=repo_id, filename="vectorizer.pkl"
-            )
-
-            # Load vectorizer
-            with open(vectorizer_path, "rb") as f:
-                self.vectorizer = pickle.load(f)
-
-            # Load model
-            self.model = Autoencoder(input_dim=MAX_FEATURES)
-            self.model.load_state_dict(torch.load(model_path, map_location=self.device))
-            self.model.to(self.device)
-            self.model.eval()
 
             logging.info("Model loaded successfully")
 
         except Exception as e:
             logging.error(f"Failed to load model: {str(e)}")
-            # Fallback to local model if available
-            self._load_local_model()
-
-    def _load_local_model(self):
-        """Load model from local filesystem as fallback"""
-        try:
-            local_model_path = "../hf_model/autoencoder_weights.pth"
-            local_vectorizer_path = "../hf_model/vectorizer.pkl"
-
-            if os.path.exists(local_model_path) and os.path.exists(
-                local_vectorizer_path
-            ):
-                logging.info("Loading local model as fallback")
-
-                with open(local_vectorizer_path, "rb") as f:
-                    self.vectorizer = pickle.load(f)
-
-                self.model = Autoencoder(input_dim=MAX_FEATURES)
-                self.model.load_state_dict(
-                    torch.load(local_model_path, map_location=self.device)
-                )
-                self.model.to(self.device)
-                self.model.eval()
-
-                logging.info("Local model loaded successfully")
-            else:
-                logging.error("No local model found")
-
-        except Exception as e:
-            logging.error(f"Failed to load local model: {str(e)}")
+            raise RuntimeError("Could not load model from any source")
 
     def is_loaded(self):
         """Check if model is loaded"""

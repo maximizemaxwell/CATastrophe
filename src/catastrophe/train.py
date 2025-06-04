@@ -55,29 +55,26 @@ def load_texts_from_hf():
         if not token:
             logging.warning("HF_TOKEN not found, falling back to local dataset")
             return load_texts_from_local()
-        
+
         logging.info(f"Loading dataset from Hugging Face: {HF_DATASET_REPO}")
-        
+
         # Load dataset from HF Hub
         dataset = load_dataset(
-            HF_DATASET_REPO, 
-            HF_DATASET_NAME,
-            token=token,
-            trust_remote_code=True
+            HF_DATASET_REPO, HF_DATASET_NAME, token=token, trust_remote_code=True
         )
-        
+
         # Extract training data
-        train_data = dataset['train']
-        
+        train_data = dataset["train"]
+
         # Combine message and func columns
         texts = []
         for item in train_data:
             combined = item["message"] + " <SEP > " + item["func"]
             texts.append(combined)
-        
+
         logging.info(f"Loaded {len(texts)} samples from Hugging Face dataset")
         return texts
-        
+
     except Exception as e:
         logging.error(f"Failed to load from Hugging Face: {e}")
         logging.info("Falling back to local dataset")
@@ -120,11 +117,15 @@ def train():
     logging.info(f"Using device: {device}")
     if torch.cuda.is_available():
         logging.info(f"GPU: {torch.cuda.get_device_name(0)}")
-        logging.info(f"GPU Memory: {torch.cuda.get_device_properties(0).total_memory / 1e9:.2f} GB")
-        logging.info(f"CUDA_VISIBLE_DEVICES: {os.environ.get('CUDA_VISIBLE_DEVICES', 'Not set')}")
+        logging.info(
+            f"GPU Memory: {torch.cuda.get_device_properties(0).total_memory / 1e9:.2f} GB"
+        )
+        logging.info(
+            f"CUDA_VISIBLE_DEVICES: {os.environ.get('CUDA_VISIBLE_DEVICES', 'Not set')}"
+        )
         logging.info(f"PyTorch CUDA version: {torch.version.cuda}")
         logging.info(f"Number of GPUs: {torch.cuda.device_count()}")
-    
+
     # Load dataset from Hugging Face Hub (with local fallback)
     texts = load_texts()
 
@@ -147,13 +148,17 @@ def train():
 
     # Use pin_memory for faster data transfer when using GPU
     pin_memory = torch.cuda.is_available()
-    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, pin_memory=pin_memory)
-    val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False, pin_memory=pin_memory)
+    train_loader = DataLoader(
+        train_dataset, batch_size=BATCH_SIZE, shuffle=True, pin_memory=pin_memory
+    )
+    val_loader = DataLoader(
+        val_dataset, batch_size=BATCH_SIZE, shuffle=False, pin_memory=pin_memory
+    )
 
     # Autoencoder model with enhanced architecture
     model = Autoencoder(input_dim=X.shape[1], dropout_rate=0.2)
     model = model.to(device)  # Move model to GPU if available
-    
+
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE, weight_decay=1e-5)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, mode="min", factor=0.5, patience=3
@@ -169,30 +174,39 @@ def train():
         # Training phase
         model.train()
         train_losses = []
-        
+
         # Log GPU memory usage at start of epoch
         if torch.cuda.is_available():
-            logging.info(f"GPU Memory before epoch {epoch + 1}: Allocated: {torch.cuda.memory_allocated(0) / 1e9:.2f} GB, Cached: {torch.cuda.memory_reserved(0) / 1e9:.2f} GB")
-        
+            logging.info(
+                f"GPU Memory before epoch {epoch + 1}: Allocated: {torch.cuda.memory_allocated(0) / 1e9:.2f} GB, Cached: {torch.cuda.memory_reserved(0) / 1e9:.2f} GB"
+            )
+
         for batch in tqdm(train_loader, desc=f"Epoch {epoch + 1} / {EPOCHS}"):
             inputs = batch[0].to(device)  # Move data to GPU
-            
+
             # Verify tensor is on GPU (only log first batch of first epoch)
             if epoch == 0 and train_losses == []:
                 logging.info(f"Input tensor device: {inputs.device}")
                 logging.info(f"Model device: {next(model.parameters()).device}")
-                
+
                 # Check nvidia-smi for GPU usage
                 if torch.cuda.is_available():
                     try:
-                        result = subprocess.run(['nvidia-smi', '--query-gpu=utilization.gpu,memory.used,memory.total', '--format=csv,noheader,nounits'], 
-                                              capture_output=True, text=True)
+                        result = subprocess.run(
+                            [
+                                "nvidia-smi",
+                                "--query-gpu=utilization.gpu,memory.used,memory.total",
+                                "--format=csv,noheader,nounits",
+                            ],
+                            capture_output=True,
+                            text=True,
+                        )
                         if result.returncode == 0:
                             gpu_info = result.stdout.strip()
                             logging.info(f"GPU Usage (nvidia-smi): {gpu_info}")
                     except Exception as e:
                         logging.debug(f"Could not run nvidia-smi: {e}")
-            
+
             optimizer.zero_grad()
             outputs = model(inputs)
             loss = criterion(outputs, inputs)
@@ -209,7 +223,7 @@ def train():
                 outputs = model(inputs)
                 loss = criterion(outputs, inputs)
                 val_losses.append(loss.item())
-        
+
         # Clear GPU cache to prevent memory issues
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
@@ -232,7 +246,9 @@ def train():
             best_val_loss = avg_val_loss
             patience_counter = 0
             # Save best model (move to CPU before saving)
-            torch.save(model.cpu().state_dict(), MODEL_WEIGHTS_PATH.with_suffix(".best.pth"))
+            torch.save(
+                model.cpu().state_dict(), MODEL_WEIGHTS_PATH.with_suffix(".best.pth")
+            )
             model = model.to(device)  # Move back to GPU
         else:
             patience_counter += 1

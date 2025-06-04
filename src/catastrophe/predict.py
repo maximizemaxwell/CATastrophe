@@ -6,9 +6,7 @@ Print the anomalies with scores above a threshold.
 
 import argparse
 import torch
-from .config import MODEL_WEIGHTS_PATH
-from .features.vectorizer import TFIDFVectorizerWrapper
-from .model.autoencoder import Autoencoder
+from .model.loader import load_model
 
 
 def predict_score(message: str, func: str) -> float:
@@ -17,31 +15,24 @@ def predict_score(message: str, func: str) -> float:
     """
     # Check for GPU availability
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    
-    # Load the vectorizer
-    vectorizer = TFIDFVectorizerWrapper.load_from_file()
+
+    # Load model and vectorizer (preferring HuggingFace Hub)
+    model, vectorizer = load_model(prefer_hub=True, device=device)
 
     # Text merge and transform
     input_text = message + " <SEP > " + func
     vec = vectorizer.transform([input_text])
     x = torch.tensor(vec.toarray(), dtype=torch.float32).to(device)
 
-    # Load the Autoencoder model
-    input_dim = vec.shape[1]
-    model = Autoencoder(input_dim=input_dim)
-    model.load_state_dict(torch.load(MODEL_WEIGHTS_PATH, map_location=device))
-    model = model.to(device)
-    model.eval()
-
     # Predict the reconstruction
     with torch.no_grad():
         reconstructed = model(x)
         anomaly_score = torch.mean((x - reconstructed) ** 2).item()
-    
+
     # Clear GPU cache if used
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
-        
+
     return anomaly_score
 
 
