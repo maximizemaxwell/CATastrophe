@@ -18,7 +18,7 @@ from huggingface_hub import HfApi
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
-from catastrphe.config import (
+from .config import (
     DATA_PATH,
     MODEL_WEIGHTS_PATH,
     VECTORIZER_PATH,
@@ -29,8 +29,8 @@ from catastrphe.config import (
     EARLY_STOPPING_PATIENCE,
     MIN_DELTA,
 )
-from catastrphe.features.vectorizer import TFIDFVectorizerWrapper
-from catastrphe.model.autoencoder import Autoencoder
+from .features.vectorizer import TFIDFVectorizerWrapper
+from .model.autoencoder import Autoencoder
 
 load_dotenv()
 logging.basicConfig(

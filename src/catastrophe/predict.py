@@ -6,9 +6,9 @@ Print the anomalies with scores above a threshold.
 
 import argparse
 import torch
-from catastrphe.config import MODEL_WEIGHTS_PATH
-from catastrphe.features.vectorizer import TFIDFVectorizerWrapper
-from catastrphe.model.autoencoder import Autoencoder
+from .config import MODEL_WEIGHTS_PATH
+from .features.vectorizer import TFIDFVectorizerWrapper
+from .model.autoencoder import Autoencoder
 
 
 def predict_score(message: str, func: str) -> float:

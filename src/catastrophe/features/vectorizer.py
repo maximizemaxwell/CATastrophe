@@ -9,7 +9,7 @@ from typing import List
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-from catastrphe.config import MAX_FEATURES, VECTORIZER_PATH
+from ..config import MAX_FEATURES, VECTORIZER_PATH
 
 
 class TFIDFVectorizerWrapper:
