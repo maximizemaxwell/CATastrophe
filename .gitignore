@@ -43,7 +43,7 @@ data/*.zip
 data/*.jsonl
 data/*.csv
 data/*.tsv
-
+data/dataset.json
 # 📈 TensorBoard
 results/
 *.metrics.json
