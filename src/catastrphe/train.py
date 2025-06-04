@@ -19,32 +19,39 @@ from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
 from catastrphe.config import (
-    DATA_PATH, MODEL_WEIGHTS_PATH, VECTORIZER_PATH,
-    BATCH_SIZE, EPOCHS, LEARNING_RATE, MAX_FEATURES,
-    EARLY_STOPPING_PATIENCE, MIN_DELTA
+    DATA_PATH,
+    MODEL_WEIGHTS_PATH,
+    VECTORIZER_PATH,
+    BATCH_SIZE,
+    EPOCHS,
+    LEARNING_RATE,
+    MAX_FEATURES,
+    EARLY_STOPPING_PATIENCE,
+    MIN_DELTA,
 )
 from catastrphe.features.vectorizer import TFIDFVectorizerWrapper
 from catastrphe.model.autoencoder import Autoencoder
 
 load_dotenv()
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
+
 
 def load_texts(path):
     """
     Load dataset from JSON, returns message+text
     """
     texts = []
-    with open(path, 'r', encoding='utf-8') as f:
+    with open(path, "r", encoding="utf-8") as f:
         for line in f:
             if not line.strip():
                 continue
             item = json.loads(line)
-            combined = item['message'] + ' <SEP > ' + item['func']
+            combined = item["message"] + " <SEP > " + item["func"]
             texts.append(combined)
     return texts
+
 
 def train():
     """
@@ -78,13 +85,13 @@ def train():
     model = Autoencoder(input_dim=X.shape[1], dropout_rate=0.2)
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE, weight_decay=1e-5)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, mode='min', factor=0.5, patience=3
+        optimizer, mode="min", factor=0.5, patience=3
     )
     criterion = nn.MSELoss()
 
     # Training loop with early stopping
     logging.info("Starting training...")
-    best_val_loss = float('inf')
+    best_val_loss = float("inf")
     patience_counter = 0
 
     for epoch in range(EPOCHS):
@@ -115,7 +122,9 @@ def train():
 
         logging.info(
             "Epoch %d - Train Loss: %.4f, Val Loss: %.4f",
-            epoch + 1, avg_train_loss, avg_val_loss
+            epoch + 1,
+            avg_train_loss,
+            avg_val_loss,
         )
 
         # Learning rate scheduling
@@ -126,7 +135,7 @@ def train():
             best_val_loss = avg_val_loss
             patience_counter = 0
             # Save best model
-            torch.save(model.state_dict(), MODEL_WEIGHTS_PATH.with_suffix('.best.pth'))
+            torch.save(model.state_dict(), MODEL_WEIGHTS_PATH.with_suffix(".best.pth"))
         else:
             patience_counter += 1
             if patience_counter >= EARLY_STOPPING_PATIENCE:
@@ -134,7 +143,7 @@ def train():
                 break
 
     # Load best model if it exists
-    best_model_path = MODEL_WEIGHTS_PATH.with_suffix('.best.pth')
+    best_model_path = MODEL_WEIGHTS_PATH.with_suffix(".best.pth")
     if best_model_path.exists():
         model.load_state_dict(torch.load(best_model_path))
         logging.info("Loaded best model from training")
@@ -245,7 +254,7 @@ anomaly score. High scores indicate potential vulnerabilities, but manual review
 recommended.
 """
 
-        with open("README.md", "w", encoding='utf-8') as f:
+        with open("README.md", "w", encoding="utf-8") as f:
             f.write(model_card_content)
 
         # Upload files
@@ -253,21 +262,21 @@ recommended.
             path_or_fileobj=model_path,
             path_in_repo="catastrophe_model.pth",
             repo_id=repo_id,
-            token=token
+            token=token,
         )
 
         api.upload_file(
             path_or_fileobj=vectorizer_path,
             path_in_repo="vectorizer.pkl",
             repo_id=repo_id,
-            token=token
+            token=token,
         )
 
         api.upload_file(
             path_or_fileobj="README.md",
             path_in_repo="README.md",
             repo_id=repo_id,
-            token=token
+            token=token,
         )
 
         # Clean up temporary files
@@ -275,7 +284,9 @@ recommended.
         os.remove(vectorizer_path)
         os.remove("README.md")
 
-        logging.info("Model successfully published to: https://huggingface.co/%s", repo_id)
+        logging.info(
+            "Model successfully published to: https://huggingface.co/%s", repo_id
+        )
 
     except Exception as e:
         logging.error("Failed to publish to Hugging Face: %s", str(e))

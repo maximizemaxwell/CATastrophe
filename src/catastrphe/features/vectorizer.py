@@ -11,12 +11,14 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 
 from catastrphe.config import MAX_FEATURES, VECTORIZER_PATH
 
+
 class TFIDFVectorizerWrapper:
     """
     TF-IDF Vectorizer Wrapper
     - Train: fit_transform
     - Predict: transform
     """
+
     def __init__(self):
         # Max features are from config.py
         self.vectorizer = TfidfVectorizer(max_features=MAX_FEATURES)
@@ -38,7 +40,7 @@ class TFIDFVectorizerWrapper:
         Save the vectorizer to a file
         """
         path.parent.mkdir(parents=True, exist_ok=True)
-        with open(path, 'wb') as f:
+        with open(path, "wb") as f:
             pickle.dump(self.vectorizer, f)
 
     @staticmethod
@@ -49,5 +51,5 @@ class TFIDFVectorizerWrapper:
         if not VECTORIZER_PATH.exists():
             raise FileNotFoundError(f"Vectorizer file not found: {VECTORIZER_PATH}")
 
-        with open(VECTORIZER_PATH, 'rb') as f:
+        with open(VECTORIZER_PATH, "rb") as f:
             return pickle.load(f)

@@ -8,10 +8,12 @@ Gets input_dim and implementation of encoder and decoder
 import torch
 from torch import nn
 
+
 class Autoencoder(nn.Module):
     """
     Enhanced Autoencoder model with dropout and batch normalization for better performance.
     """
+
     def __init__(self, input_dim: int, dropout_rate: float = 0.2):
         """
         Initialize the Autoencoder model with improved architecture
@@ -28,17 +30,14 @@ class Autoencoder(nn.Module):
             nn.BatchNorm1d(1024),
             nn.ReLU(),
             nn.Dropout(dropout_rate),
-
             nn.Linear(1024, 512),
             nn.BatchNorm1d(512),
             nn.ReLU(),
             nn.Dropout(dropout_rate),
-
             nn.Linear(512, 256),
             nn.BatchNorm1d(256),
             nn.ReLU(),
             nn.Dropout(dropout_rate),
-
             nn.Linear(256, 128),
             nn.BatchNorm1d(128),
             nn.ReLU(),
@@ -50,17 +49,14 @@ class Autoencoder(nn.Module):
             nn.BatchNorm1d(256),
             nn.ReLU(),
             nn.Dropout(dropout_rate),
-
             nn.Linear(256, 512),
             nn.BatchNorm1d(512),
             nn.ReLU(),
             nn.Dropout(dropout_rate),
-
             nn.Linear(512, 1024),
             nn.BatchNorm1d(1024),
             nn.ReLU(),
             nn.Dropout(dropout_rate),
-
             nn.Linear(1024, input_dim),
         )
 
